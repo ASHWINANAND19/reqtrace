@@ -4,3 +4,5 @@ export function formatDate(value: string | null | undefined) {
 }
 
 export const PRIORITY_COLOR: Record<string, string> = { Must: 'red', Should: 'orange', Could: 'yellow' }
+
+export const TYPE_COLOR: Record<string, string> = { positive: 'teal', negative: 'red', boundary: 'grape' }

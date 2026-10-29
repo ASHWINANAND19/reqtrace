@@ -145,3 +145,36 @@ class Requirement(Base):
     priority: Mapped[str] = mapped_column(String(10), default="Should")
 
     srs_version: Mapped[SRSVersion] = relationship(back_populates="requirements")
+
+
+class TestCase(Base):
+    __tablename__ = "test_cases"
+    __test__ = False  # not a pytest test class
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    srs_version_id: Mapped[int] = mapped_column(ForeignKey("srs_versions.id", ondelete="CASCADE"), index=True)
+    tc_id: Mapped[str] = mapped_column(String(20))
+    title: Mapped[str] = mapped_column(String(200))
+    type: Mapped[str] = mapped_column(String(12))  # positive | negative | boundary
+    preconditions: Mapped[str] = mapped_column(Text, default="")
+    steps: Mapped[list] = mapped_column(JSON)
+    expected_result: Mapped[str] = mapped_column(Text)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    links: Mapped[list["TraceLink"]] = relationship(
+        back_populates="test_case", cascade="all, delete-orphan", passive_deletes=True
+    )
+
+
+class TraceLink(Base):
+    """Requirement-to-test link; the traceability matrix is computed from these rows (FR-07)."""
+
+    __tablename__ = "trace_links"
+
+    test_case_id: Mapped[int] = mapped_column(ForeignKey("test_cases.id", ondelete="CASCADE"), primary_key=True)
+    requirement_id: Mapped[int] = mapped_column(ForeignKey("requirements.id", ondelete="CASCADE"), primary_key=True)
+
+    test_case: Mapped[TestCase] = relationship(back_populates="links")
+    requirement: Mapped[Requirement] = relationship()
