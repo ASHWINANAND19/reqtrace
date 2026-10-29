@@ -34,7 +34,7 @@ If ports 80/443 are taken, set `HTTP_PORT` and `HTTPS_PORT` in `.env`.
 
 | Member | Role |
 |---|---|
-| Abhinav D | Team lead; back end, agent orchestration, database |
+| Abhinav D | Back end, agent orchestration, database |
 | Abhay Natesh | Front end, test design and execution |
 | Abhishek M | Documentation, DevOps (Docker, CI), integration |
-| Ashwin Anand | UML and test-case agents, security and performance testing |
+| Ashwin Anand | Scrum Master and repo owner; UML and test-case agents, security and performance testing |

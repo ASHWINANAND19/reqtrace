@@ -79,7 +79,7 @@ reqtrace/
 
 ## 5. Product backlog
 
-Story points use Fibonacci (1, 2, 3, 5, 8). Owners follow SRS Appendix B roles.
+Story points use Fibonacci (1, 2, 3, 5, 8). Owners follow SRS Appendix B roles. Ashwin is the Scrum Master.
 
 | PB | Story | Requirements | Test cases | Pts | Owner | Sprint |
 |---|---|---|---|---|---|---|
@@ -155,8 +155,9 @@ For each story:
 1. **[C]** Move the card to *In Progress*, create `feat/<issue#>-<slug>`, implement with tests, commit, push.
 2. **[T/A]** The owner opens the PR (GitHub shows a "Compare & pull request" button, about one minute).
 3. **[C]** Check that CI is green and fix it if not.
-4. **[A]** Review and merge (merge commit, so stacked story branches stay clean); the issue closes and
-   the card moves to *Done*. Ashwin's own PRs are reviewed by Abhinav (team lead).
+4. **[A]** Ashwin (Scrum Master, repo owner) reviews and merges (merge commit, so stacked story
+   branches stay clean); the issue closes and the card moves to *Done*. GitHub does not let anyone
+   approve their own PR, so Ashwin merges his own stories with the admin bypass.
 
 Then:
 5. **[C]** End-to-end smoke test (TC-50) in Docker Compose with the real Gemini key; write `docs/sprint-1-review.md`.
