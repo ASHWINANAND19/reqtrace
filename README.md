@@ -10,7 +10,25 @@ and approved by a human.
   `ReqTrace-TP-01`, SAD `ReqTrace-SAD-01`)
 - Build and sprint plan: [docs/PLAN.md](docs/PLAN.md)
 
-Setup and run instructions are added as the project is built.
+## Run with Docker Compose
+
+Requires Docker. From the repository root:
+
+```bash
+cp .env.example .env   # optional: add GEMINI_API_KEY and set LLM_PROVIDER=gemini
+docker compose up --build
+```
+
+Open https://localhost (the certificate is self-signed, so the browser asks you to accept it once).
+Without a `.env` file the app starts with the offline mock LLM.
+
+| Service | Image | Purpose |
+|---|---|---|
+| `frontend` | nginx + built React app | Serves the UI, terminates TLS, proxies `/api` |
+| `backend` | Python 3.11 + FastAPI | REST API and AI agents |
+| `db` | PostgreSQL 15 | Persistent storage |
+
+If ports 80/443 are taken, set `HTTP_PORT` and `HTTPS_PORT` in `.env`.
 
 ## Team
 

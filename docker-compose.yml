@@ -1,0 +1,52 @@
+# One-command start (NFR-05):  docker compose up --build
+# Settings come from .env (see .env.example); without it the app runs with the mock LLM.
+name: reqtrace
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-reqtrace}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-reqtrace-dev}
+      POSTGRES_DB: ${POSTGRES_DB:-reqtrace}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    image: ${DOCKERHUB_USER:-reqtrace}/reqtrace-backend:${IMAGE_TAG:-latest}
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-reqtrace}:${POSTGRES_PASSWORD:-reqtrace-dev}@db:5432/${POSTGRES_DB:-reqtrace}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
+      SESSION_MINUTES: ${SESSION_MINUTES:-60}
+      LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    volumes:
+      - storage:/data
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    image: ${DOCKERHUB_USER:-reqtrace}/reqtrace-frontend:${IMAGE_TAG:-latest}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  storage:
