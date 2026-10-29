@@ -8,7 +8,7 @@
 | `k8s/kind-config.yaml` | Maps the front end to `https://localhost:8443` |
 
 ```bash
-DOCKERHUB_USER=<user> ./deploy/k8s/deploy.sh    # images published by the CD workflow
+DOCKERHUB_USER=hadesash ./deploy/k8s/deploy.sh  # images published by the CD workflow
 ./deploy/k8s/deploy.sh --build                   # build locally instead
 kubectl -n reqtrace get pods                     # 1 postgres, 2 backend, 1 frontend
 kubectl -n reqtrace scale deployment/backend --replicas=3   # scale the API/agent layer (NFR-07)
