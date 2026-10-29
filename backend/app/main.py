@@ -1,8 +1,10 @@
 """FastAPI application entry point."""
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
+from app.agents.llm import LLMUnavailableError
 from app.config import get_settings
 from app.db import SessionLocal, init_db
 from app.routers import admin, auth, inputs, projects, srs
@@ -22,6 +24,14 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name, docs_url="/api/docs", openapi_url="/api/openapi.json", lifespan=lifespan
     )
+
+    @app.exception_handler(LLMUnavailableError)
+    async def llm_unavailable(_: Request, exc: LLMUnavailableError) -> JSONResponse:
+        # e.g. provider misconfigured: keep the app usable and say so plainly (NFR-03)
+        return JSONResponse(
+            status_code=503, content={"detail": "The AI service is not available right now. Your work is saved."}
+        )
+
     app.include_router(auth.router)
     app.include_router(admin.router)
     app.include_router(projects.router)
