@@ -3,6 +3,7 @@ import { IconDeviceFloppy, IconPencil, IconSparkles } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { get, post, put } from '../api'
 import { useAuth } from '../auth'
+import ExportButton from '../components/ExportButton'
 import { formatDate } from '../format'
 import { notifyError, notifySuccess } from '../notify'
 import type { ProjectTabProps } from '../pages/ProjectPage'
@@ -53,32 +54,47 @@ export default function TestPlanTab({ project }: ProjectTabProps) {
       <Card withBorder>
         <Group justify="space-between">
           <Text size="sm" c="dimmed">
-            {plan ? `Based on approved SRS v${plan.srs_version_no} · updated ${formatDate(plan.updated_at)}` : 'No test plan yet.'}
+            {plan
+              ? `Based on approved SRS v${plan.srs_version_no} · updated ${formatDate(plan.updated_at)}`
+              : 'No test plan yet.'}
           </Text>
-          {canEdit && (
-            <Group>
-              {plan && !draft && (
-                <Button variant="default" leftSection={<IconPencil size={16} />} onClick={() => setDraft(plan.sections)}>
-                  Edit
-                </Button>
-              )}
-              {draft && (
-                <>
-                  <Button variant="default" onClick={() => setDraft(null)}>
-                    Cancel
+          <Group>
+            {plan && !draft && (
+              <ExportButton
+                path={`${base.replace('/test-plan', '/export')}/test-plan.docx`}
+                fileName="test-plan.docx"
+                label="Export DOCX"
+              />
+            )}
+            {canEdit && (
+              <Group>
+                {plan && !draft && (
+                  <Button
+                    variant="default"
+                    leftSection={<IconPencil size={16} />}
+                    onClick={() => setDraft(plan.sections)}
+                  >
+                    Edit
                   </Button>
-                  <Button leftSection={<IconDeviceFloppy size={16} />} onClick={save}>
-                    Save
+                )}
+                {draft && (
+                  <>
+                    <Button variant="default" onClick={() => setDraft(null)}>
+                      Cancel
+                    </Button>
+                    <Button leftSection={<IconDeviceFloppy size={16} />} onClick={save}>
+                      Save
+                    </Button>
+                  </>
+                )}
+                {!draft && (
+                  <Button leftSection={<IconSparkles size={16} />} loading={busy} onClick={generate}>
+                    Generate test plan
                   </Button>
-                </>
-              )}
-              {!draft && (
-                <Button leftSection={<IconSparkles size={16} />} loading={busy} onClick={generate}>
-                  Generate test plan
-                </Button>
-              )}
-            </Group>
-          )}
+                )}
+              </Group>
+            )}
+          </Group>
         </Group>
         {error && (
           <Alert color="red" mt="sm">

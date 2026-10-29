@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from app.agents.llm import LLMUnavailableError
 from app.config import get_settings
 from app.db import SessionLocal, init_db
-from app.routers import admin, auth, diagrams, inputs, projects, srs, testcases, testplan, traceability
+from app.routers import admin, auth, diagrams, export, inputs, projects, srs, testcases, testplan, traceability
 from app.seed import seed_admin
 
 
@@ -41,6 +41,7 @@ def create_app() -> FastAPI:
     app.include_router(traceability.router)
     app.include_router(testplan.router)
     app.include_router(diagrams.router)
+    app.include_router(export.router)
 
     @app.get("/api/health", tags=["system"])
     def health() -> dict:
