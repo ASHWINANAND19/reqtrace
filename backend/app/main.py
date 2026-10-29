@@ -5,7 +5,7 @@ from fastapi import FastAPI
 
 from app.config import get_settings
 from app.db import SessionLocal, init_db
-from app.routers import admin, auth, projects
+from app.routers import admin, auth, inputs, projects
 from app.seed import seed_admin
 
 
@@ -25,6 +25,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(admin.router)
     app.include_router(projects.router)
+    app.include_router(inputs.router)
 
     @app.get("/api/health", tags=["system"])
     def health() -> dict:
