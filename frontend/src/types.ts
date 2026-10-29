@@ -97,3 +97,12 @@ export interface TestSuite {
   srs_version: SrsSummary | null
   test_cases: TestCase[]
 }
+
+export interface TraceMatrix {
+  srs_version: SrsSummary | null
+  rows: { req_id: string; type: string; title: string; priority: string; test_cases: string[]; covered: boolean }[]
+  total: number
+  covered: number
+  coverage_percent: number
+  uncovered: string[]
+}
