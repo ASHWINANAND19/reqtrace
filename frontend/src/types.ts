@@ -39,3 +39,36 @@ export interface RequirementInput {
   author_name: string | null
   created_at: string
 }
+
+export interface SrsSection {
+  number: string
+  title: string
+  content: string
+}
+
+export interface SrsRequirement {
+  req_id: string
+  type: 'functional' | 'non-functional'
+  title: string
+  description: string
+  priority: 'Must' | 'Should' | 'Could'
+}
+
+export interface SrsSummary {
+  id: number
+  version_no: number
+  title: string
+  status: 'draft' | 'approved'
+  source: 'generated' | 'edited'
+  note: string
+  author_name: string | null
+  created_at: string
+  approved_by_name: string | null
+  approved_at: string | null
+  requirement_count: number
+}
+
+export interface SrsVersion extends SrsSummary {
+  sections: SrsSection[]
+  requirements: SrsRequirement[]
+}

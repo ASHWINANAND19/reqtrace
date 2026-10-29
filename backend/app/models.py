@@ -2,7 +2,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base, utcnow
@@ -101,3 +101,47 @@ class RequirementInput(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     author: Mapped[User | None] = relationship()
+
+
+class SRSVersion(Base):
+    """Every save is a new row, never an in-place update (FR-05, SAD AD-3)."""
+
+    __tablename__ = "srs_versions"
+    __table_args__ = (UniqueConstraint("project_id", "version_no"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    version_no: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(String(200))
+    sections: Mapped[list] = mapped_column(JSON)  # [{"number", "title", "content"}]
+    status: Mapped[str] = mapped_column(String(12), default="draft")  # draft | approved
+    source: Mapped[str] = mapped_column(String(12), default="generated")  # generated | edited
+    note: Mapped[str] = mapped_column(String(300), default="")
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    approved_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+    author: Mapped[User | None] = relationship(foreign_keys=[created_by])
+    approver: Mapped[User | None] = relationship(foreign_keys=[approved_by])
+    requirements: Mapped[list["Requirement"]] = relationship(
+        back_populates="srs_version", cascade="all, delete-orphan", passive_deletes=True, order_by="Requirement.id"
+    )
+
+
+class Requirement(Base):
+    """One row per requirement ID per SRS version, so tests can link to it (FR-07, SAD AD-4)."""
+
+    __tablename__ = "requirements"
+    __table_args__ = (UniqueConstraint("srs_version_id", "req_id"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    srs_version_id: Mapped[int] = mapped_column(ForeignKey("srs_versions.id", ondelete="CASCADE"), index=True)
+    req_id: Mapped[str] = mapped_column(String(20))
+    type: Mapped[str] = mapped_column(String(20))  # functional | non-functional
+    title: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text)
+    priority: Mapped[str] = mapped_column(String(10), default="Should")
+
+    srs_version: Mapped[SRSVersion] = relationship(back_populates="requirements")
