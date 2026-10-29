@@ -122,3 +122,12 @@ export interface QualityReport {
   conflicts: number
   conflict_check: 'done' | 'unavailable'
 }
+
+export interface TestPlan {
+  id: number
+  srs_version_no: number
+  sections: { title: string; content: string }[]
+  requirement_ids: string[]
+  created_at: string
+  updated_at: string
+}
