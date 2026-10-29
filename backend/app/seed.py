@@ -1,5 +1,6 @@
 """Create the initial Administrator from ADMIN_EMAIL / ADMIN_PASSWORD (admins cannot self-register)."""
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -16,4 +17,7 @@ def seed_admin(db: Session) -> None:
         return
     db.add(User(name="Administrator", email=email, password_hash=hash_password(settings.admin_password),
                 role=Role.ADMIN))
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:  # another replica created it at the same moment
+        db.rollback()

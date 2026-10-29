@@ -46,3 +46,54 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  k8s-smoke:
+    name: Deploy to Kubernetes (kind) and smoke-test
+    needs: publish
+    # Runs for pull requests (publish is skipped) and after a successful publish on main
+    if: ${{ !cancelled() && (needs.publish.result == 'success' || needs.publish.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: reqtrace
+          config: deploy/k8s/kind-config.yaml
+      - name: Create throwaway secrets (mock LLM)
+        run: |
+          cat > ci.env <<ENV
+          POSTGRES_USER=reqtrace
+          POSTGRES_PASSWORD=$(openssl rand -hex 16)
+          POSTGRES_DB=reqtrace
+          JWT_SECRET=$(openssl rand -hex 32)
+          LLM_PROVIDER=mock
+          ENV
+      - name: Deploy (images built from this pull request)
+        if: github.event_name == 'pull_request'
+        env:
+          ENV_FILE: ci.env
+          SKIP_CLUSTER: "1"
+        run: ./deploy/k8s/deploy.sh --build
+      - name: Deploy (images just published to Docker Hub)
+        if: github.event_name == 'push'
+        env:
+          ENV_FILE: ci.env
+          SKIP_CLUSTER: "1"
+          DOCKERHUB_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: IMAGE_TAG="sha-${GITHUB_SHA::7}" ./deploy/k8s/deploy.sh
+      - name: Smoke test through nginx (TC-50)
+        run: |
+          base=https://localhost:8443/api
+          curl -kfsS "$base/health"
+          curl -kfsS https://localhost:8443/ | grep -q "<title>ReqTrace</title>"
+          curl -kfsS -X POST "$base/auth/register" -H 'Content-Type: application/json' \
+            -d '{"name":"CI","email":"ci@example.com","password":"Ci-Passw0rd!","role":"Analyst"}' > /dev/null
+          token=$(curl -kfsS -X POST "$base/auth/login" -H 'Content-Type: application/json' \
+            -d '{"email":"ci@example.com","password":"Ci-Passw0rd!"}' | jq -r .access_token)
+          auth="Authorization: Bearer $token"
+          pid=$(curl -kfsS -X POST "$base/projects" -H "$auth" -H 'Content-Type: application/json' \
+            -d '{"name":"Smoke"}' | jq -r .id)
+          curl -kfsS -X POST "$base/projects/$pid/inputs/text" -H "$auth" -H 'Content-Type: application/json' \
+            -d '{"content":"The system shall let members search books by title."}' > /dev/null
+          curl -kfsS -X POST "$base/projects/$pid/srs/generate" -H "$auth" | jq -e '.requirements | length > 0'
+          kubectl -n reqtrace get pods
