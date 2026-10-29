@@ -1,0 +1,47 @@
+name: PR automation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  linked-issue:
+    name: Linked backlog issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require "Closes #N" in the PR title or description
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s\n%s' "$TITLE" "$BODY" | grep -Eiq '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+'; then
+            echo "Linked backlog issue found."
+          else
+            echo "::error::Link the backlog story, e.g. 'Closes #4', in the PR description."
+            exit 1
+          fi
+
+  label:
+    name: Label by changed paths
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v5
+        with:
+          sync-labels: true
+
+  assign-author:
+    name: Assign PR to its author
+    if: github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh pr edit ${{ github.event.pull_request.number }}
+          --repo ${{ github.repository }}
+          --add-assignee ${{ github.event.pull_request.user.login }}
