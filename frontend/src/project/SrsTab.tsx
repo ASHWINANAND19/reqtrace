@@ -1,5 +1,5 @@
 import { Alert, Badge, Button, Card, Group, Loader, Select, Stack, Text } from '@mantine/core'
-import { IconSparkles } from '@tabler/icons-react'
+import { IconCircleCheck, IconGitCompare, IconPencil, IconSparkles } from '@tabler/icons-react'
 import { useCallback, useEffect, useState } from 'react'
 import { get, post } from '../api'
 import { useAuth } from '../auth'
@@ -7,7 +7,9 @@ import { formatDate } from '../format'
 import { notifyError, notifySuccess } from '../notify'
 import type { ProjectTabProps } from '../pages/ProjectPage'
 import type { SrsSummary, SrsVersion } from '../types'
+import CompareModal from './CompareModal'
 import SrsDocument from './SrsDocument'
+import SrsEditor from './SrsEditor'
 
 export default function SrsTab({ project }: ProjectTabProps) {
   const { can } = useAuth()
@@ -16,7 +18,10 @@ export default function SrsTab({ project }: ProjectTabProps) {
   const [loaded, setLoaded] = useState<SrsVersion | null>(null)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [comparing, setComparing] = useState(false)
   const base = `/projects/${project.id}/srs`
+  const canEdit = can('Analyst', 'Administrator')
 
   const loadVersions = useCallback(
     (select?: number) =>
@@ -53,7 +58,33 @@ export default function SrsTab({ project }: ProjectTabProps) {
     }
   }
 
+  async function approve() {
+    if (!version) return
+    try {
+      const approved = await post<SrsVersion>(`${base}/versions/${version.id}/approve`)
+      setLoaded(approved)
+      notifySuccess(`Version ${approved.version_no} approved`)
+      loadVersions(approved.id)
+    } catch (err) {
+      notifyError(err)
+    }
+  }
+
   if (versions === null) return <Loader />
+
+  if (editing && version) {
+    return (
+      <SrsEditor
+        projectId={project.id}
+        version={version}
+        onCancel={() => setEditing(false)}
+        onSaved={(saved) => {
+          setEditing(false)
+          loadVersions(saved.id)
+        }}
+      />
+    )
+  }
 
   return (
     <Stack>
@@ -88,11 +119,28 @@ export default function SrsTab({ project }: ProjectTabProps) {
               </Stack>
             )}
           </Group>
-          {can('Analyst', 'Administrator') && (
-            <Button leftSection={<IconSparkles size={16} />} loading={generating} onClick={generate}>
-              Generate SRS
-            </Button>
-          )}
+          <Group>
+            {versions.length > 1 && (
+              <Button variant="default" leftSection={<IconGitCompare size={16} />} onClick={() => setComparing(true)}>
+                Compare
+              </Button>
+            )}
+            {canEdit && version && (
+              <Button variant="default" leftSection={<IconPencil size={16} />} onClick={() => setEditing(true)}>
+                Edit
+              </Button>
+            )}
+            {canEdit && version?.status === 'draft' && (
+              <Button color="teal" variant="light" leftSection={<IconCircleCheck size={16} />} onClick={approve}>
+                Approve
+              </Button>
+            )}
+            {canEdit && (
+              <Button leftSection={<IconSparkles size={16} />} loading={generating} onClick={generate}>
+                Generate SRS
+              </Button>
+            )}
+          </Group>
         </Group>
         {generating && (
           <Group mt="sm" gap="xs">
@@ -116,6 +164,9 @@ export default function SrsTab({ project }: ProjectTabProps) {
         <Card withBorder>
           <SrsDocument version={version} />
         </Card>
+      )}
+      {comparing && (
+        <CompareModal projectId={project.id} versions={versions} opened={comparing} onClose={() => setComparing(false)} />
       )}
     </Stack>
   )

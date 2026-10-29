@@ -1,10 +1,12 @@
 """SRS generation, versions and approval (FR-04, FR-05)."""
+import difflib
 import logging
 import time
 from datetime import datetime
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -12,10 +14,10 @@ from app import audit
 from app.agents.base import AgentError, looks_like_injection
 from app.agents.llm import LLMProvider, get_llm
 from app.agents.srs_agent import IEEE830_SECTIONS, SRSAgent, assign_ids
-from app.db import get_db
+from app.db import get_db, utcnow
 from app.deps import get_project, require_roles
 from app.models import Project, Requirement, RequirementInput, SRSVersion, User
-from app.permissions import EDIT_SRS
+from app.permissions import APPROVE_SRS, EDIT_SRS
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/projects/{project_id}/srs", tags=["srs"])
@@ -168,3 +170,118 @@ def list_versions(project: Project = Depends(get_project), db: Session = Depends
 @router.get("/versions/{version_id}", response_model=VersionOut)
 def get_version(version_id: int, project: Project = Depends(get_project), db: Session = Depends(get_db)) -> VersionOut:
     return version_out(load_version(db, project, version_id))
+
+
+class SectionIn(BaseModel):
+    number: str
+    content: str = Field(max_length=20_000)
+
+
+class RequirementIn(BaseModel):
+    req_id: str = Field(pattern=r"^[A-Z]{2,4}-\d{1,3}$")
+    type: Literal["functional", "non-functional"]
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=5_000)
+    priority: Literal["Must", "Should", "Could"]
+
+
+class SaveIn(BaseModel):
+    base_version_id: int
+    title: str = Field(min_length=1, max_length=200)
+    sections: list[SectionIn]
+    requirements: list[RequirementIn]
+    note: str = Field("", max_length=300)
+
+    @field_validator("requirements")
+    @classmethod
+    def unique_ids(cls, value: list[RequirementIn]) -> list[RequirementIn]:
+        ids = [r.req_id for r in value]
+        duplicates = sorted({i for i in ids if ids.count(i) > 1})
+        if duplicates:
+            raise ValueError(f"Duplicate requirement IDs: {', '.join(duplicates)}")
+        return value
+
+
+@router.post("/versions", response_model=VersionOut, status_code=status.HTTP_201_CREATED)
+def save_version(
+    body: SaveIn,
+    project: Project = Depends(get_project),
+    user: User = Depends(require_roles(*EDIT_SRS)),
+    db: Session = Depends(get_db),
+) -> VersionOut:
+    base = load_version(db, project, body.base_version_id)
+    edited = {s.number: s.content.strip() for s in body.sections if s.number in SECTION_TITLES}
+    # Keep the IEEE 830 order; a section the user removed is kept empty so the completeness check can report it
+    sections = [{"number": n, "title": t, "content": edited.get(n, "")} for n, t in IEEE830_SECTIONS]
+    version = create_version(
+        db, project, user, body.title.strip(), sections, [r.model_dump() for r in body.requirements], "edited",
+        body.note.strip() or f"Edited from v{base.version_no}",
+    )
+    audit.record(db, user, "edit", "srs", version.version_no, project.id, version.note)
+    db.commit()
+    return version_out(version)
+
+
+@router.post("/versions/{version_id}/approve", response_model=VersionOut)
+def approve_version(
+    version_id: int,
+    project: Project = Depends(get_project),
+    user: User = Depends(require_roles(*APPROVE_SRS)),
+    db: Session = Depends(get_db),
+) -> VersionOut:
+    version = load_version(db, project, version_id)
+    if version.status != "approved":
+        version.status = "approved"
+        version.approved_by = user.id
+        version.approved_at = utcnow()
+        audit.record(db, user, "approve", "srs", version.version_no, project.id)
+        db.commit()
+        db.refresh(version)
+    return version_out(version)
+
+
+class SectionDiff(BaseModel):
+    number: str
+    title: str
+    changed: bool
+    lines: list[str]
+
+
+class RequirementChange(BaseModel):
+    req_id: str
+    before: RequirementOut | None
+    after: RequirementOut | None
+
+
+class CompareOut(BaseModel):
+    a: VersionSummary
+    b: VersionSummary
+    title_changed: bool
+    sections: list[SectionDiff]
+    requirements: list[RequirementChange]
+
+
+@router.get("/compare", response_model=CompareOut)
+def compare_versions(
+    a: int, b: int, project: Project = Depends(get_project), db: Session = Depends(get_db)
+) -> CompareOut:
+    old, new = load_version(db, project, a), load_version(db, project, b)
+    old_sections = {s["number"]: s for s in old.sections}
+    section_diffs = []
+    for s in new.sections:
+        before = old_sections.get(s["number"], {}).get("content", "").splitlines()
+        after = s["content"].splitlines()
+        lines = [line for line in difflib.ndiff(before, after) if not line.startswith("?")]
+        section_diffs.append(SectionDiff(number=s["number"], title=s["title"], changed=before != after, lines=lines))
+
+    old_reqs = {r.req_id: RequirementOut.model_validate(r) for r in old.requirements}
+    new_reqs = {r.req_id: RequirementOut.model_validate(r) for r in new.requirements}
+    changes = [
+        RequirementChange(req_id=rid, before=old_reqs.get(rid), after=new_reqs.get(rid))
+        for rid in sorted(old_reqs.keys() | new_reqs.keys())
+        if old_reqs.get(rid) != new_reqs.get(rid)
+    ]
+    return CompareOut(
+        a=summary(old), b=summary(new), title_changed=old.title != new.title, sections=section_diffs,
+        requirements=changes,
+    )

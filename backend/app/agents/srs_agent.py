@@ -102,10 +102,27 @@ def _statements(text: str) -> list[str]:
     return [c.rstrip(".") for c in cleaned if len(c.split()) >= 3][:40]
 
 
+_ABILITY = re.compile(
+    r"^(?P<who>[\w ]{1,40}?) (?:can|may|(?:must|should|shall) be able to|are able to|is able to) (?P<what>.+)$",
+    re.IGNORECASE,
+)
+_LEAD = re.compile(r"(?i)^(the (system|application)s? )?(shall|must|should|will) (be able to )?")
+
+
 def _as_shall(statement: str) -> str:
+    ability = _ABILITY.match(statement)
+    if ability and not ability["who"].lower().startswith("the system"):
+        return f"The system shall allow {ability['who'].lower()} to {ability['what']}."
     if re.search(r"\b(shall|must|should|will)\b", statement, re.IGNORECASE):
         return statement[0].upper() + statement[1:] + "."
     return f"The system shall {statement[0].lower() + statement[1:]}."
+
+
+def _title(statement: str) -> str:
+    ability = _ABILITY.match(statement)
+    text = ability["what"] if ability else _LEAD.sub("", statement)
+    words = re.sub(r"[^\w\s-]", "", text).split()[:5]
+    return " ".join(words).capitalize() or "Requirement"
 
 
 @register_mock("srs")
@@ -115,11 +132,8 @@ def mock_srs(payload: dict[str, Any]) -> dict[str, Any]:
     requirements = []
     for s in statements:
         kind = "non-functional" if _NFR_HINTS.search(s) else "functional"
-        title = " ".join(re.sub(r"(?i)^the (system|application|user)s? (shall|must|should|will) ", "", s).split()[:6])
         priority = "Must" if re.search(r"\b(shall|must)\b", s, re.IGNORECASE) else "Should"
-        requirements.append(
-            {"type": kind, "title": title.capitalize(), "description": _as_shall(s), "priority": priority}
-        )
+        requirements.append({"type": kind, "title": _title(s), "description": _as_shall(s), "priority": priority})
     if not any(r["type"] == "functional" for r in requirements):
         requirements[0]["type"] = "functional"
     summary = "; ".join(r["title"].lower() for r in requirements[:5])

@@ -29,3 +29,6 @@ backend/storage/
 .idea/
 .vscode/
 *.tsbuildinfo
+
+# Local tooling
+.claude/
