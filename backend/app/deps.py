@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.db import get_db, utcnow
-from app.models import AuthSession, User
+from app.models import AuthSession, Project, ProjectMember, User
 from app.security import decode_token
 
 bearer = HTTPBearer(auto_error=False)
@@ -62,3 +62,13 @@ def require_roles(*roles: str) -> Callable[..., User]:
         return user
 
     return checker
+
+
+def get_project(project_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Project:
+    """Load a project the current user is a member of (SEC-07)."""
+    project = db.get(Project, project_id)
+    if project is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Project not found.")
+    if db.get(ProjectMember, (project_id, user.id)) is None:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "You are not a member of this project.")
+    return project
