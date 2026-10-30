@@ -30,3 +30,12 @@ export interface Project {
 export interface ProjectDetail extends Project {
   members: Member[]
 }
+
+export interface RequirementInput {
+  id: number
+  kind: 'text' | 'file'
+  filename: string | null
+  content: string
+  author_name: string | null
+  created_at: string
+}

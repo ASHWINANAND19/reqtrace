@@ -2,6 +2,7 @@ import { Alert, Badge, Group, Loader, Stack, Tabs, Text, Title } from '@mantine/
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { get } from '../api'
+import InputTab from '../project/InputTab'
 import OverviewTab from '../project/OverviewTab'
 import type { ProjectDetail } from '../types'
 
@@ -12,6 +13,7 @@ export interface ProjectTabProps {
 
 const TABS: { value: string; label: string; Component: (props: ProjectTabProps) => React.ReactNode }[] = [
   { value: 'overview', label: 'Overview', Component: OverviewTab },
+  { value: 'input', label: 'Input', Component: InputTab },
 ]
 
 export default function ProjectPage() {

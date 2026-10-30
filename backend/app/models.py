@@ -84,3 +84,20 @@ class ProjectMember(Base):
 
     project: Mapped[Project] = relationship(back_populates="members")
     user: Mapped[User] = relationship()
+
+
+class RequirementInput(Base):
+    """Raw requirements text, typed or extracted from an uploaded file (FR-03)."""
+
+    __tablename__ = "inputs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(10))  # "text" or "file"
+    filename: Mapped[str | None] = mapped_column(String(255))
+    stored_path: Mapped[str | None] = mapped_column(String(500))
+    content: Mapped[str] = mapped_column(Text)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+    author: Mapped[User | None] = relationship()
