@@ -1,5 +1,8 @@
 # Usability test (TC-44, NFR-02)
 
+**Status:** not run. The team dropped this session at the end of Sprint 2 (deviation D-14). The plan is kept
+below for reference.
+
 **Goal:** a first-time user generates an SRS draft within 10 minutes without training.
 
 **Participants:** three peers who have not used ReqTrace before (not team members).
