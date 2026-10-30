@@ -111,7 +111,7 @@ Story points use Fibonacci (1, 2, 3, 5, 8). Owners follow SRS Appendix B roles.
 | 26 | Architecture suggestions (stretch) | FR-13 | TC-41 | 5 | Ashwin | – |
 | 27 | GitHub issue creation from requirements (stretch) | FR-14 | TC-42 | 5 | Abhinav | – |
 
-**Load:** Sprint 1 = 46 pts (Abhinav 13, Ashwin 10, Abhay 13, Abhishek 8).
+**Load:** Sprint 1 = 44 pts (Abhinav 13, Ashwin 10, Abhay 13, Abhishek 8).
 Sprint 2 = 41 pts (Ashwin 13, Abhinav 9, Abhay 8, Abhishek 11).
 
 ## 6. Sprint backlogs
@@ -155,7 +155,8 @@ For each story:
 1. **[C]** Move the card to *In Progress*, create `feat/<issue#>-<slug>`, implement with tests, commit, push.
 2. **[T/A]** The owner opens the PR (GitHub shows a "Compare & pull request" button, about one minute).
 3. **[C]** Check that CI is green and fix it if not.
-4. **[A]** Review and merge (squash); the issue closes and the card moves to *Done*.
+4. **[A]** Review and merge (merge commit, so stacked story branches stay clean); the issue closes and
+   the card moves to *Done*. Ashwin's own PRs are reviewed by Abhinav (team lead).
 
 Then:
 5. **[C]** End-to-end smoke test (TC-50) in Docker Compose with the real Gemini key; write `docs/sprint-1-review.md`.
