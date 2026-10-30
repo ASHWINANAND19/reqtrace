@@ -2,7 +2,7 @@
 from collections.abc import Iterator
 from datetime import UTC, datetime
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -48,4 +48,8 @@ def get_db() -> Iterator[Session]:
 def init_db() -> None:
     from app import models  # noqa: F401  (registers tables)
 
-    Base.metadata.create_all(engine)
+    with engine.begin() as conn:
+        if conn.dialect.name == "postgresql":
+            # Several back-end replicas may start together (Kubernetes); only one creates the tables
+            conn.execute(text("SELECT pg_advisory_xact_lock(4242)"))
+        Base.metadata.create_all(conn)

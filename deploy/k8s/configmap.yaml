@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reqtrace-config
+data:
+  SESSION_MINUTES: "60"
+  STORAGE_DIR: /data
+  BACKEND_URL: http://backend:8000
