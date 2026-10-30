@@ -23,6 +23,8 @@ spec:
       labels:
         app: backend
     spec:
+      # Time to leave the Service before shutting down, so no request reaches a stopping pod (bug #57)
+      terminationGracePeriodSeconds: 30
       initContainers:
         - name: wait-for-db
           image: postgres:15-alpine
@@ -39,6 +41,10 @@ spec:
           env:
             - name: DATABASE_URL
               value: postgresql+psycopg://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres:5432/$(POSTGRES_DB)
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "5"]
           readinessProbe:
             httpGet: { path: /api/health, port: 8000 }
             periodSeconds: 5
