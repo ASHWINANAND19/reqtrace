@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     max_upload_mb: int = 10
     storage_dir: str = "./storage"
 
+    # Initial Administrator account, created at start-up if both are set
+    admin_email: str = ""
+    admin_password: str = ""
+
     # LLM provider: "gemini" in deployment, "mock" for tests and offline demos
     llm_provider: str = "mock"
     gemini_api_key: str = ""
