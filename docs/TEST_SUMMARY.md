@@ -35,7 +35,9 @@
 
 | Issue | Severity | Found by | Resolution |
 |---|---|---|---|
-| #28 Default Gemini model unavailable for new API keys | High | TC-11 with a real key | Fallback model list; fixed |
+| #28 Default Gemini model unavailable for new API keys | High | TC-11 with a real key | Fallback model list; fixed in #31 |
+| #49 Class diagram from Gemini fails to render (statements joined with semicolons) | Medium | End-to-end run with real Gemini | The UML agent puts each statement on its own line before rendering; fixed in #56 |
+| #57 Kubernetes smoke test fails intermittently with HTTP 502 | Medium | CD smoke test on pull requests | No restart on a first deploy, preStop delay on back-end pods, smoke test waits for steady health; fixed in #58 |
 
 During development the team also found and fixed several issues before merge:
 - Mermaid diagrams failed to render when drawn in parallel.
