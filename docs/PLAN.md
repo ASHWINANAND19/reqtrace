@@ -55,8 +55,8 @@ reqtrace/
 │   ├── app/
 │   └── tests/
 ├── frontend/           React SPA
+├── docker-compose.yml  one-command start at the repo root
 ├── deploy/
-│   ├── docker-compose.yml
 │   └── k8s/            namespace, postgres, backend, frontend, configmap, secret template
 ├── loadtest/           locustfile.py (NFR-01)
 ├── docs/               PLAN, DEVIATIONS, USER_GUIDE, TEST_LOG, TEST_SUMMARY, sprint reviews
