@@ -30,6 +30,22 @@ Without a `.env` file the app starts with the offline mock LLM.
 
 If ports 80/443 are taken, set `HTTP_PORT` and `HTTPS_PORT` in `.env`.
 
+## CI/CD
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `CI` | every PR and push to `main` | ruff + pytest with coverage (≥70%), ESLint + type-checked build, gitleaks secret scan |
+| `PR automation` | every PR | requires a linked backlog issue (`Closes #N`), labels by changed paths, assigns the author |
+| `CD` | push to `main`, `v*` tags | builds both images and publishes them to Docker Hub as `<user>/reqtrace-backend` and `<user>/reqtrace-frontend` (tags: `latest`, `sha-<commit>`, version) |
+
+Docker Hub credentials are repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (an access token, never a password).
+
+To run the published images instead of building locally:
+
+```bash
+DOCKERHUB_USER=<user> docker compose pull && DOCKERHUB_USER=<user> docker compose up
+```
+
 ## Team
 
 | Member | Role |
