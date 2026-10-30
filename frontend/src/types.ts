@@ -72,3 +72,11 @@ export interface SrsVersion extends SrsSummary {
   sections: SrsSection[]
   requirements: SrsRequirement[]
 }
+
+export interface SrsCompare {
+  a: SrsSummary
+  b: SrsSummary
+  title_changed: boolean
+  sections: { number: string; title: string; changed: boolean; lines: string[] }[]
+  requirements: { req_id: string; before: SrsRequirement | null; after: SrsRequirement | null }[]
+}
