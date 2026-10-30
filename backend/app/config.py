@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     # LLM provider: "gemini" in deployment, "mock" for tests and offline demos
     llm_provider: str = "mock"
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    # Comma-separated: the first model is used, the others are fallbacks when it is busy or retired
+    gemini_model: str = "gemini-3-flash-preview,gemini-3.1-flash-lite"
     llm_timeout_seconds: int = 60
     llm_max_retries: int = 2
 

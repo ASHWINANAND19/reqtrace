@@ -17,7 +17,6 @@ addopts = "-q"
 
 [tool.coverage.run]
 source = ["app"]
-omit = ["app/agents/gemini.py"]  # real network provider; mocked in tests
 
 [tool.coverage.report]
 show_missing = true
