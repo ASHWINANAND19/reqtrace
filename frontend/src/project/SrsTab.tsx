@@ -1,13 +1,14 @@
 import { Alert, Badge, Button, Card, Group, Loader, Select, Stack, Text } from '@mantine/core'
-import { IconCircleCheck, IconGitCompare, IconPencil, IconSparkles } from '@tabler/icons-react'
+import { IconCircleCheck, IconGitCompare, IconPencil, IconSparkles, IconZoomCheck } from '@tabler/icons-react'
 import { useCallback, useEffect, useState } from 'react'
 import { get, post } from '../api'
 import { useAuth } from '../auth'
 import { formatDate } from '../format'
 import { notifyError, notifySuccess } from '../notify'
 import type { ProjectTabProps } from '../pages/ProjectPage'
-import type { SrsSummary, SrsVersion } from '../types'
+import type { QualityReport, SrsSummary, SrsVersion } from '../types'
 import CompareModal from './CompareModal'
+import QualityPanel from './QualityPanel'
 import SrsDocument from './SrsDocument'
 import SrsEditor from './SrsEditor'
 
@@ -20,6 +21,8 @@ export default function SrsTab({ project }: ProjectTabProps) {
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
   const [comparing, setComparing] = useState(false)
+  const [quality, setQuality] = useState<QualityReport | null>(null)
+  const [checking, setChecking] = useState(false)
   const base = `/projects/${project.id}/srs`
   const canEdit = can('Analyst', 'Administrator')
 
@@ -70,6 +73,18 @@ export default function SrsTab({ project }: ProjectTabProps) {
     }
   }
 
+  async function checkQuality() {
+    if (!version) return
+    setChecking(true)
+    try {
+      setQuality(await post<QualityReport>(`${base}/versions/${version.id}/check`))
+    } catch (err) {
+      notifyError(err)
+    } finally {
+      setChecking(false)
+    }
+  }
+
   if (versions === null) return <Loader />
 
   if (editing && version) {
@@ -99,7 +114,10 @@ export default function SrsTab({ project }: ProjectTabProps) {
                 label: `v${v.version_no} · ${v.status} · ${v.source}`,
               }))}
               value={selected}
-              onChange={setSelected}
+              onChange={(v) => {
+                setSelected(v)
+                setQuality(null)
+              }}
               allowDeselect={false}
               w={260}
             />
@@ -120,6 +138,11 @@ export default function SrsTab({ project }: ProjectTabProps) {
             )}
           </Group>
           <Group>
+            {version && (
+              <Button variant="default" leftSection={<IconZoomCheck size={16} />} loading={checking} onClick={checkQuality}>
+                Check quality
+              </Button>
+            )}
             {versions.length > 1 && (
               <Button variant="default" leftSection={<IconGitCompare size={16} />} onClick={() => setComparing(true)}>
                 Compare
@@ -160,6 +183,7 @@ export default function SrsTab({ project }: ProjectTabProps) {
       {versions.length === 0 && !generating && (
         <Text c="dimmed">Add requirements on the Input tab, then generate the first SRS draft.</Text>
       )}
+      {quality && <QualityPanel report={quality} onClose={() => setQuality(null)} />}
       {version && (
         <Card withBorder>
           <SrsDocument version={version} />

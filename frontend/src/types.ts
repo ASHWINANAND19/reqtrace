@@ -106,3 +106,19 @@ export interface TraceMatrix {
   coverage_percent: number
   uncovered: string[]
 }
+
+export interface QualityFlag {
+  kind: 'vague' | 'missing' | 'conflict'
+  location: string
+  text: string
+  reason: string
+  suggestion: string
+}
+
+export interface QualityReport {
+  flags: QualityFlag[]
+  vague: number
+  missing: number
+  conflicts: number
+  conflict_check: 'done' | 'unavailable'
+}

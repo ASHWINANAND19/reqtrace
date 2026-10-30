@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app import audit
 from app.agents.base import AgentError, looks_like_injection
 from app.agents.llm import LLMProvider, get_llm
+from app.agents.quality_agent import ConflictAgent, Flag, missing_flags, vague_flags
 from app.agents.srs_agent import IEEE830_SECTIONS, SRSAgent, assign_ids
 from app.db import get_db, utcnow
 from app.deps import get_project, require_roles
@@ -302,3 +303,48 @@ def require_approved(db: Session, project: Project) -> SRSVersion:
     if version is None:
         raise HTTPException(status.HTTP_409_CONFLICT, "Approve an SRS version first. Generation uses the approved SRS.")
     return version
+
+
+class QualityReport(BaseModel):
+    flags: list[Flag]
+    vague: int
+    missing: int
+    conflicts: int
+    conflict_check: str  # "done" or "unavailable"
+
+
+@router.post("/versions/{version_id}/check", response_model=QualityReport)
+def check_quality(
+    version_id: int,
+    project: Project = Depends(get_project),
+    llm: LLMProvider = Depends(get_llm),
+    db: Session = Depends(get_db),
+) -> QualityReport:
+    """Flag vague wording, missing sections and conflicting requirements (FR-11)."""
+    version = load_version(db, project, version_id)
+    requirements = [
+        {"req_id": r.req_id, "type": r.type, "description": r.description} for r in version.requirements
+    ]
+    flags = missing_flags(version.sections, requirements)
+    for r in requirements:
+        flags += vague_flags(r["req_id"], r["description"])
+    for s in version.sections:
+        flags += vague_flags(f"{s['number']} {s['title']}", s["content"])
+
+    conflict_check = "done"
+    if len(requirements) > 1:
+        try:
+            report = ConflictAgent(llm).run({"requirements": requirements})
+            flags += [
+                Flag(kind="conflict", location=", ".join(c.requirement_ids), text="", reason=c.reason,
+                     suggestion=c.suggestion)
+                for c in report.conflicts
+            ]
+        except AgentError:
+            conflict_check = "unavailable"  # rule-based results are still returned
+
+    def count(kind: str) -> int:
+        return sum(f.kind == kind for f in flags)
+
+    return QualityReport(flags=flags, vague=count("vague"), missing=count("missing"), conflicts=count("conflict"),
+                         conflict_check=conflict_check)
