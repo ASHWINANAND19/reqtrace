@@ -285,3 +285,20 @@ def compare_versions(
         a=summary(old), b=summary(new), title_changed=old.title != new.title, sections=section_diffs,
         requirements=changes,
     )
+
+
+def latest_approved(db: Session, project: Project) -> SRSVersion | None:
+    """The newest approved SRS version: the baseline for tests, test plan and diagrams (SAD AD-5)."""
+    query = (
+        select(SRSVersion)
+        .where(SRSVersion.project_id == project.id, SRSVersion.status == "approved")
+        .order_by(SRSVersion.version_no.desc())
+    )
+    return db.scalars(query).first()
+
+
+def require_approved(db: Session, project: Project) -> SRSVersion:
+    version = latest_approved(db, project)
+    if version is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Approve an SRS version first. Generation uses the approved SRS.")
+    return version

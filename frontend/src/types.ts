@@ -80,3 +80,20 @@ export interface SrsCompare {
   sections: { number: string; title: string; changed: boolean; lines: string[] }[]
   requirements: { req_id: string; before: SrsRequirement | null; after: SrsRequirement | null }[]
 }
+
+export interface TestCase {
+  id: number
+  tc_id: string
+  title: string
+  type: 'positive' | 'negative' | 'boundary'
+  preconditions: string
+  steps: string[]
+  expected_result: string
+  requirement_ids: string[]
+  created_at: string
+}
+
+export interface TestSuite {
+  srs_version: SrsSummary | null
+  test_cases: TestCase[]
+}
