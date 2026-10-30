@@ -139,3 +139,19 @@ export interface Diagram {
   srs_version_no: number
   updated_at: string
 }
+
+export interface AdminUser extends User {
+  is_active: boolean
+}
+
+export interface AuditEntry {
+  id: number
+  created_at: string
+  user_name: string | null
+  action: string
+  entity: string
+  entity_id: string | null
+  project_id: number | null
+  project_name: string | null
+  detail: string
+}
