@@ -12,6 +12,7 @@
   "dependencies": {
     "@mantine/core": "^9.7.4",
     "@mantine/hooks": "^9.7.4",
+    "@mantine/modals": "^9.7.4",
     "@mantine/notifications": "^9.7.4",
     "@tabler/icons-react": "^3.50.0",
     "mermaid": "^11.17.2",
