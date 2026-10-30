@@ -3,6 +3,7 @@ import { IconCircleCheck, IconGitCompare, IconPencil, IconSparkles, IconZoomChec
 import { useCallback, useEffect, useState } from 'react'
 import { get, post } from '../api'
 import { useAuth } from '../auth'
+import ExportButton from '../components/ExportButton'
 import { formatDate } from '../format'
 import { notifyError, notifySuccess } from '../notify'
 import type { ProjectTabProps } from '../pages/ProjectPage'
@@ -31,7 +32,7 @@ export default function SrsTab({ project }: ProjectTabProps) {
       get<SrsSummary[]>(`${base}/versions`)
         .then((list) => {
           setVersions(list)
-          setSelected((current) => String(select ?? (current ? Number(current) : list[0]?.id ?? '')) || null)
+          setSelected((current) => String(select ?? (current ? Number(current) : (list[0]?.id ?? ''))) || null)
         })
         .catch(notifyError),
     [base],
@@ -139,7 +140,19 @@ export default function SrsTab({ project }: ProjectTabProps) {
           </Group>
           <Group>
             {version && (
-              <Button variant="default" leftSection={<IconZoomCheck size={16} />} loading={checking} onClick={checkQuality}>
+              <ExportButton
+                path={`${base.replace('/srs', '/export')}/srs.docx?version_id=${version.id}`}
+                fileName={`SRS-v${version.version_no}.docx`}
+                label="Export DOCX"
+              />
+            )}
+            {version && (
+              <Button
+                variant="default"
+                leftSection={<IconZoomCheck size={16} />}
+                loading={checking}
+                onClick={checkQuality}
+              >
                 Check quality
               </Button>
             )}
@@ -190,7 +203,12 @@ export default function SrsTab({ project }: ProjectTabProps) {
         </Card>
       )}
       {comparing && (
-        <CompareModal projectId={project.id} versions={versions} opened={comparing} onClose={() => setComparing(false)} />
+        <CompareModal
+          projectId={project.id}
+          versions={versions}
+          opened={comparing}
+          onClose={() => setComparing(false)}
+        />
       )}
     </Stack>
   )

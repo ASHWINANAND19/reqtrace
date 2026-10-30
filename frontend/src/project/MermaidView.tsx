@@ -7,7 +7,14 @@ let queue: Promise<unknown> = Promise.resolve()
 function renderMermaid(id: string, source: string): Promise<string> {
   const job = queue.then(async () => {
     const { default: mermaid } = await import('mermaid') // loaded on demand to keep the main bundle small
-    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'default' })
+    // SVG text labels (not HTML) so the diagram can be drawn onto a canvas for PNG export
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'strict',
+      theme: 'default',
+      htmlLabels: false,
+      flowchart: { htmlLabels: false },
+    })
     try {
       return (await mermaid.render(id, source)).svg
     } finally {
@@ -27,7 +34,9 @@ export default function MermaidView({ source }: { source: string }) {
     let cancelled = false
     renderMermaid(id, source)
       .then((svg) => !cancelled && setResult({ source, svg }))
-      .catch((err: unknown) => !cancelled && setResult({ source, error: err instanceof Error ? err.message : String(err) }))
+      .catch(
+        (err: unknown) => !cancelled && setResult({ source, error: err instanceof Error ? err.message : String(err) }),
+      )
     return () => {
       cancelled = true
     }

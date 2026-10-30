@@ -20,13 +20,21 @@ import { IconPencil, IconPlus, IconSparkles, IconTrash } from '@tabler/icons-rea
 import { useCallback, useEffect, useState } from 'react'
 import { del, get, post, put } from '../api'
 import { useAuth } from '../auth'
+import ExportButton from '../components/ExportButton'
 import { TYPE_COLOR } from '../format'
 import { notifyError, notifySuccess } from '../notify'
 import type { ProjectTabProps } from '../pages/ProjectPage'
 import type { SrsVersion, TestCase, TestSuite } from '../types'
 
 type Draft = Omit<TestCase, 'id' | 'tc_id' | 'created_at'>
-const EMPTY: Draft = { title: '', type: 'positive', preconditions: '', steps: [''], expected_result: '', requirement_ids: [] }
+const EMPTY: Draft = {
+  title: '',
+  type: 'positive',
+  preconditions: '',
+  steps: [''],
+  expected_result: '',
+  requirement_ids: [],
+}
 
 export default function TestsTab({ project }: ProjectTabProps) {
   const { can } = useAuth()
@@ -102,18 +110,31 @@ export default function TestsTab({ project }: ProjectTabProps) {
               ? `Based on approved SRS v${suite.srs_version.version_no} · ${suite.test_cases.length} test cases`
               : 'Approve an SRS version on the SRS tab to generate tests.'}
           </Text>
-          {canGenerate && (
-            <Group>
-              {suite.srs_version && (
-                <Button variant="default" leftSection={<IconPlus size={16} />} onClick={() => setEditing({ id: null, draft: EMPTY })}>
-                  Add test case
+          <Group>
+            {suite.test_cases.length > 0 && (
+              <ExportButton
+                path={`/projects/${project.id}/export/test-cases.csv`}
+                fileName="test-cases.csv"
+                label="Export CSV"
+              />
+            )}
+            {canGenerate && (
+              <Group>
+                {suite.srs_version && (
+                  <Button
+                    variant="default"
+                    leftSection={<IconPlus size={16} />}
+                    onClick={() => setEditing({ id: null, draft: EMPTY })}
+                  >
+                    Add test case
+                  </Button>
+                )}
+                <Button leftSection={<IconSparkles size={16} />} loading={busy} onClick={generate}>
+                  Generate tests
                 </Button>
-              )}
-              <Button leftSection={<IconSparkles size={16} />} loading={busy} onClick={generate}>
-                Generate tests
-              </Button>
-            </Group>
-          )}
+              </Group>
+            )}
+          </Group>
         </Group>
         {busy && (
           <Text size="sm" c="dimmed" mt="sm">
@@ -166,10 +187,19 @@ export default function TestsTab({ project }: ProjectTabProps) {
                   {canGenerate && (
                     <Table.Td>
                       <Group gap={4} wrap="nowrap">
-                        <ActionIcon variant="subtle" aria-label={`Edit ${tc.tc_id}`} onClick={() => setEditing({ id: tc.id, draft: { ...tc } })}>
+                        <ActionIcon
+                          variant="subtle"
+                          aria-label={`Edit ${tc.tc_id}`}
+                          onClick={() => setEditing({ id: tc.id, draft: { ...tc } })}
+                        >
                           <IconPencil size={16} />
                         </ActionIcon>
-                        <ActionIcon variant="subtle" color="red" aria-label={`Delete ${tc.tc_id}`} onClick={() => remove(tc)}>
+                        <ActionIcon
+                          variant="subtle"
+                          color="red"
+                          aria-label={`Delete ${tc.tc_id}`}
+                          onClick={() => remove(tc)}
+                        >
                           <IconTrash size={16} />
                         </ActionIcon>
                       </Group>
@@ -182,10 +212,19 @@ export default function TestsTab({ project }: ProjectTabProps) {
         </Card>
       )}
 
-      <Modal opened={!!editing} onClose={() => setEditing(null)} title={editing?.id ? 'Edit test case' : 'New test case'} size="lg">
+      <Modal
+        opened={!!editing}
+        onClose={() => setEditing(null)}
+        title={editing?.id ? 'Edit test case' : 'New test case'}
+        size="lg"
+      >
         {editing && (
           <Stack>
-            <TextInput label="Title" value={editing.draft.title} onChange={(e) => setDraft({ title: e.currentTarget.value })} />
+            <TextInput
+              label="Title"
+              value={editing.draft.title}
+              onChange={(e) => setDraft({ title: e.currentTarget.value })}
+            />
             <Group grow>
               <Select
                 label="Type"
@@ -202,7 +241,12 @@ export default function TestsTab({ project }: ProjectTabProps) {
                 searchable
               />
             </Group>
-            <Textarea label="Preconditions" autosize value={editing.draft.preconditions} onChange={(e) => setDraft({ preconditions: e.currentTarget.value })} />
+            <Textarea
+              label="Preconditions"
+              autosize
+              value={editing.draft.preconditions}
+              onChange={(e) => setDraft({ preconditions: e.currentTarget.value })}
+            />
             <Textarea
               label="Steps (one per line)"
               autosize
@@ -210,7 +254,12 @@ export default function TestsTab({ project }: ProjectTabProps) {
               value={editing.draft.steps.join('\n')}
               onChange={(e) => setDraft({ steps: e.currentTarget.value.split('\n') })}
             />
-            <Textarea label="Expected result" autosize value={editing.draft.expected_result} onChange={(e) => setDraft({ expected_result: e.currentTarget.value })} />
+            <Textarea
+              label="Expected result"
+              autosize
+              value={editing.draft.expected_result}
+              onChange={(e) => setDraft({ expected_result: e.currentTarget.value })}
+            />
             <Button onClick={save}>Save</Button>
           </Stack>
         )}

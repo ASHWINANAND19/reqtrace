@@ -2,6 +2,7 @@ import { Alert, Badge, Card, Group, Loader, Progress, SimpleGrid, Stack, Table, 
 import { IconAlertTriangle } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
 import { get } from '../api'
+import ExportButton from '../components/ExportButton'
 import { PRIORITY_COLOR } from '../format'
 import { notifyError } from '../notify'
 import type { ProjectTabProps } from '../pages/ProjectPage'
@@ -46,8 +47,13 @@ export default function TraceabilityTab({ project }: ProjectTabProps) {
         </Alert>
       )}
       <Card withBorder p={0}>
-        <Group p="sm">
+        <Group p="sm" justify="space-between">
           <Title order={5}>Traceability matrix · SRS v{matrix.srs_version.version_no}</Title>
+          <ExportButton
+            path={`/projects/${project.id}/export/traceability.csv`}
+            fileName="traceability.csv"
+            label="Export CSV"
+          />
         </Group>
         <Table verticalSpacing="xs">
           <Table.Thead>
