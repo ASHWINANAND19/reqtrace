@@ -42,7 +42,8 @@ remain in the product backlog.
 ## Quality
 
 See [TEST_SUMMARY.md](TEST_SUMMARY.md):
-- 46 of 50 test cases pass; TC-41 and TC-42 are stretch features not built.
+- 46 of 50 test cases pass. TC-41 and TC-42 are stretch features not built.
+- TC-44 (usability) was not run and TC-46 (portability) was run only in part (deviation D-14).
 - p95 is 61 ms under 20 users.
 - 9 of 9 live security checks pass.
 

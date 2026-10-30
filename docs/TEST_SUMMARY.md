@@ -1,6 +1,6 @@
 # Test summary report
 
-**Project:** ReqTrace · **Test Plan:** ReqTrace-TP-01 · **Build:** Sprint 2 (`v1.0.0` candidate) · **Date:** 30 Oct 2026
+**Project:** ReqTrace · **Test Plan:** ReqTrace-TP-01 · **Build:** Sprint 2 (`v1.0.0`) · **Date:** 30 Oct 2026
 
 ## Results
 
@@ -9,7 +9,7 @@
 | Unit / integration | 113 automated back-end tests (pytest, mock LLM) | 113 pass |
 | Coverage | `backend/app` line coverage | 98% (target ≥ 70%, NFR-06) |
 | Static checks | ruff, ESLint, TypeScript build, gitleaks | Clean |
-| System | TC-01 to TC-50 ([TEST_LOG.md](TEST_LOG.md)) | 46 pass, 2 not run, 2 pending |
+| System | TC-01 to TC-50 ([TEST_LOG.md](TEST_LOG.md)) | 46 pass, 1 partial, 3 not run |
 | Security | TC-33 to TC-39, live on Kubernetes with Gemini | 9/9 live checks pass; bcrypt confirmed in DB |
 | Performance | TC-43: 20 users × 5 min (Locust) | p95 61 ms, 0 failures (target ≤ 2 s) |
 | Data volume | TC-48: 50 projects | listed in 17–25 ms |
@@ -24,10 +24,12 @@
 | No open Critical or High defects | Met. #28 (High) fixed |
 | 100% requirement coverage in the RTM | Met for all built requirements. FR-13 and FR-14 (Could) were not built, so TC-41/42 are out of scope (TP §1.2) |
 
-## Open items before sign-off
+## Not run or partial
 
-- **TC-44 usability:** three peers run the task in [USABILITY_TEST.md](USABILITY_TEST.md).
-- **TC-46 portability:** open the app in Firefox and Edge.
+- **TC-41, TC-42:** FR-13 and FR-14 (*Could*) were not built (deviation D-3).
+- **TC-44 usability:** the team dropped the peer session (deviation D-14).
+- **TC-46 portability:** Docker Compose verified in Chromium on the development Mac. The clean-machine run and
+  the Firefox/Edge check were dropped (deviation D-14).
 
 ## Defects
 

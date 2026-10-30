@@ -8,7 +8,7 @@ Execution of the 50 test cases in the Test Plan (`ReqTrace-TP-01`, §8). Build: 
   (`gemini-3-flash-preview`), plus Docker Compose
 - **Browser:** Chromium (Claude Code browser pane) against the local build
 
-**Status key:** Pass · Not run (stretch feature not built) · Pending (manual activity still to be done)
+**Status key:** Pass · Partial (only some steps run) · Not run (stretch feature not built, or dropped by the team; see the deviation)
 
 | TC | Req. | Title | Evidence | Result |
 |---|---|---|---|---|
@@ -55,9 +55,9 @@ Execution of the 50 test cases in the Test Plan (`ReqTrace-TP-01`, §8). Build: 
 | TC-41 | FR-13 | Architecture suggestion | FR-13 not implemented (Could, deviation D-3) | Not run |
 | TC-42 | FR-14 | GitHub issue creation | FR-14 not implemented (Could, deviation D-3) | Not run |
 | TC-43 | NFR-01 | Response time under load | Locust, 20 users, 5 min on Kubernetes: 3,036 requests, 0 failures, p95 61 ms (target ≤ 2,000 ms) | Pass |
-| TC-44 | NFR-02 | First-time usability | Three peers to generate an SRS unaided; checklist in [USABILITY_TEST.md](USABILITY_TEST.md) | Pending |
+| TC-44 | NFR-02 | First-time usability | Peer usability session dropped by the team (deviation D-14); the planned task card is in [USABILITY_TEST.md](USABILITY_TEST.md) | Not run |
 | TC-45 | NFR-03 | LLM service unavailable | `test_srs::test_llm_outage_gives_friendly_503_and_keeps_input`, `test_agent_base::test_unavailable_provider…` | Pass |
-| TC-46 | NFR-05 | Docker one-command deployment | `docker compose up --build` on macOS serves https://localhost; Chromium verified; Firefox/Edge still to be checked | Pending |
+| TC-46 | NFR-05 | Docker one-command deployment | `docker compose up --build` on the development Mac serves https://localhost in Chromium. Clean-machine run and Firefox/Edge not done (deviation D-14) | Partial |
 | TC-47 | NFR-06 | Coverage and lint in CI | ruff and ESLint pass; back-end coverage 98% (≥ 70%); CI workflow runs on every PR | Pass |
 | TC-48 | NFR-07 | Data volume | `test_projects::test_fifty_projects_listed`; Kubernetes: 50 projects listed in 17–25 ms (target ≤ 2 s) | Pass |
 | TC-49 | NFR-08 | Retry on partial LLM response | `test_agent_base::test_malformed_output_is_retried_with_stricter_prompt`, `test_srs::test_malformed_output_retried_then_saved` | Pass |
