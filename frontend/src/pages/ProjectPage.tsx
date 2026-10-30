@@ -5,6 +5,7 @@ import { get } from '../api'
 import InputTab from '../project/InputTab'
 import OverviewTab from '../project/OverviewTab'
 import SrsTab from '../project/SrsTab'
+import TestPlanTab from '../project/TestPlanTab'
 import TestsTab from '../project/TestsTab'
 import TraceabilityTab from '../project/TraceabilityTab'
 import type { ProjectDetail } from '../types'
@@ -20,6 +21,7 @@ const TABS: { value: string; label: string; Component: (props: ProjectTabProps) 
   { value: 'srs', label: 'SRS', Component: SrsTab },
   { value: 'tests', label: 'Test Cases', Component: TestsTab },
   { value: 'traceability', label: 'Traceability', Component: TraceabilityTab },
+  { value: 'test-plan', label: 'Test Plan', Component: TestPlanTab },
 ]
 
 export default function ProjectPage() {

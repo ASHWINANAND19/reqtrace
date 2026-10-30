@@ -178,3 +178,19 @@ class TraceLink(Base):
 
     test_case: Mapped[TestCase] = relationship(back_populates="links")
     requirement: Mapped[Requirement] = relationship()
+
+
+class TestPlan(Base):
+    """Generated test plan for an approved SRS version (FR-09)."""
+
+    __tablename__ = "test_plans"
+    __test__ = False
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    srs_version_id: Mapped[int] = mapped_column(ForeignKey("srs_versions.id", ondelete="CASCADE"), index=True)
+    sections: Mapped[list] = mapped_column(JSON)  # [{"title", "content"}]
+    requirement_ids: Mapped[list] = mapped_column(JSON)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
