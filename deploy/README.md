@@ -21,6 +21,9 @@ kind delete cluster --name reqtrace              # remove everything
 `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `JWT_SECRET`, `LLM_PROVIDER` and, for real generation,
 `GEMINI_API_KEY` and `GEMINI_MODEL`. `ADMIN_EMAIL` / `ADMIN_PASSWORD` create the first Administrator.
 
+PostgreSQL keeps the password it was first created with on its volume. To change `POSTGRES_PASSWORD` after
+the first deploy, start over with `kubectl delete namespace reqtrace` (this deletes the data).
+
 ## Ports
 
 | URL | Service |

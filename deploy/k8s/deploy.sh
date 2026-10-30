@@ -35,13 +35,23 @@ fi
 kubectl apply -f "$here/namespace.yaml"
 kubectl -n reqtrace create secret generic reqtrace-secrets --from-env-file="$env_file" \
   --dry-run=client -o yaml | kubectl apply -f -
+# A redeploy (deployment already there) restarts pods below; a first deploy must not (bug #57)
+redeploy="$(kubectl -n reqtrace get deployment backend -o name 2>/dev/null || true)"
 kubectl kustomize "$here" | sed -e "s#IMAGE_REPO#$image_repo#g" -e "s#IMAGE_TAG#$image_tag#g" | kubectl apply -f -
 
-# Pick up new images and secrets even when the tag (e.g. latest) did not change
-kubectl -n reqtrace rollout restart deployment/backend deployment/frontend
+# On a redeploy, pick up new images and secrets even when the tag (e.g. latest) did not change
+if [[ -n "$redeploy" ]]; then
+  kubectl -n reqtrace rollout restart deployment/backend deployment/frontend
+fi
 kubectl -n reqtrace rollout status statefulset/postgres --timeout=180s
 kubectl -n reqtrace rollout status deployment/backend --timeout=240s
 kubectl -n reqtrace rollout status deployment/frontend --timeout=120s
+# rollout status returns while replaced pods may still be shutting down; wait until they are gone
+for _ in $(seq 1 60); do
+  pods="$(kubectl -n reqtrace get pods -l app=backend --no-headers 2>/dev/null || true)"
+  [[ "$pods" == *Terminating* ]] || break
+  sleep 2
+done
 kubectl -n reqtrace get pods,svc
 echo
 echo "ReqTrace is running: https://localhost:8443 (self-signed certificate)"

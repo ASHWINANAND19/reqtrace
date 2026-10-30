@@ -84,6 +84,14 @@ jobs:
       - name: Smoke test through nginx (TC-50)
         run: |
           base=https://localhost:8443/api
+          # Wait for five healthy answers in a row through nginx before testing (bug #57)
+          ok=0
+          for i in $(seq 1 60); do
+            if curl -kfsS -o /dev/null "$base/health"; then ok=$((ok + 1)); else ok=0; fi
+            [ "$ok" -ge 5 ] && break
+            sleep 1
+          done
+          [ "$ok" -ge 5 ] || { echo "API never became steadily healthy"; kubectl -n reqtrace get pods; exit 1; }
           curl -kfsS "$base/health"
           curl -kfsS https://localhost:8443/ | grep -q "<title>ReqTrace</title>"
           curl -kfsS -X POST "$base/auth/register" -H 'Content-Type: application/json' \
