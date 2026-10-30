@@ -63,3 +63,28 @@ def test_qa_cannot_generate_diagrams(client, analyst, qa):
 
 def test_strip_fences():
     assert strip_fences("```mermaid\nclassDiagram\n```") == "classDiagram"
+
+
+def test_single_line_sources_are_split_into_statements():  # bug #49
+    from app.agents.uml_agent import clean_source
+
+    gemini_class = 'classDiagram; class Book { +String title; +String isbn; }; Member "1" --> "*" Loan : has;'
+    assert clean_source(gemini_class).splitlines() == [
+        "classDiagram", "  class Book {", "  +String title", "  +String isbn", "  }", '  Member "1" --> "*" Loan : has'
+    ]
+    sequence = 'sequenceDiagram; actor Member; Member->>UI: "Search; then borrow"; UI-->>Member: "done"'
+    assert clean_source(sequence).splitlines() == [
+        "sequenceDiagram", "  actor Member", '  Member->>UI: "Search; then borrow"', '  UI-->>Member: "done"'
+    ]
+    multi_line = "classDiagram\n  class A"
+    assert clean_source(multi_line) == multi_line
+
+
+def test_generated_single_line_class_diagram_is_stored_multi_line(client, analyst):
+    pid, _ = approved_project(client, analyst)
+    one_line = {"use_case": 'flowchart LR; a{"Ok?"}-->b', "class_diagram": "classDiagram; class A { +int id; }",
+                "sequence": "sequenceDiagram; A->>B: hi"}
+    client.app.dependency_overrides[get_llm] = lambda: ScriptedProvider(json.dumps(one_line))
+    diagrams = {d["kind"]: d["source"] for d in gen(client, analyst, pid).json()}
+    assert diagrams["class"] == "classDiagram\n  class A {\n  +int id\n  }"
+    assert diagrams["use_case"] == 'flowchart LR\n  a{"Ok?"}-->b'  # braces untouched outside class diagrams

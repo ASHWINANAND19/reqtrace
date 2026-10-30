@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app import audit
 from app.agents.base import AgentError
 from app.agents.llm import LLMProvider, get_llm
-from app.agents.uml_agent import DIAGRAM_KINDS, UMLAgent, strip_fences
+from app.agents.uml_agent import DIAGRAM_KINDS, UMLAgent, clean_source
 from app.db import get_db, utcnow
 from app.deps import get_project, require_roles
 from app.models import Diagram, Project, SRSVersion, User
@@ -71,7 +71,7 @@ def generate_diagrams(
     for kind, source in draft.by_kind().items():
         diagram = existing.get(kind) or Diagram(project_id=project.id, kind=kind)
         diagram.srs_version_id = version.id
-        diagram.source = strip_fences(source)
+        diagram.source = clean_source(source)
         diagram.updated_at = utcnow()
         db.add(diagram)
     audit.record(db, user, "generate", "diagrams", version.version_no, project.id)

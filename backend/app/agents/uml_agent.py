@@ -30,6 +30,38 @@ def strip_fences(source: str) -> str:
     return re.sub(r"\s*```$", "", source).strip()
 
 
+def _split_statements(line: str) -> list[str]:
+    """Split on semicolons that are not inside double-quoted labels."""
+    parts, current, quoted = [], "", False
+    for char in line:
+        if char == '"':
+            quoted = not quoted
+        if char == ";" and not quoted:
+            parts.append(current)
+            current = ""
+        else:
+            current += char
+    parts.append(current)
+    return [p.strip() for p in parts if p.strip()]
+
+
+def clean_source(source: str) -> str:
+    """Strip code fences and put one statement per line.
+
+    Models sometimes return a whole diagram on one line joined with ';'. Flowcharts and sequence diagrams
+    accept that, but class diagrams do not (bug #49), so single-line sources are split into lines.
+    """
+    source = strip_fences(source)
+    if "\n" in source or ";" not in source:
+        return source
+    if source.startswith("classDiagram"):
+        # class bodies must be "class X {" / one member per line / "}"
+        source = re.sub(r"\{\s*", "{;", source)
+        source = re.sub(r"\s*\}", ";}", source)
+    header, *body = _split_statements(source)
+    return "\n".join([header] + [f"  {statement}" for statement in body])
+
+
 class UMLAgent(Agent[UMLDraft]):
     task = "uml"
     output_model = UMLDraft
@@ -47,14 +79,15 @@ class UMLAgent(Agent[UMLDraft]):
             "relationships with multiplicities.\n"
             "- sequence: a 'sequenceDiagram' of the most important user flow, with actor, UI, API and database "
             "participants.\n"
-            "Always wrap labels that contain spaces or punctuation in double quotes.\n\n"
+            "Put every statement on its own line (use line breaks in the JSON string) and never join statements "
+            "with semicolons. Always wrap labels that contain spaces or punctuation in double quotes.\n\n"
             f"Requirements:\n{wrap_untrusted(lines)}"
         )
 
     def check(self, output: UMLDraft, data: dict[str, Any]) -> None:
         for kind, source in output.by_kind().items():
             title, headers = DIAGRAM_KINDS[kind]
-            if not strip_fences(source).startswith(headers):
+            if not clean_source(source).startswith(headers):
                 raise ValueError(f"{title} must start with {' or '.join(headers)}")
 
 
