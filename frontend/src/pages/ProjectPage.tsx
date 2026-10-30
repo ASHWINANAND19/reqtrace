@@ -2,6 +2,7 @@ import { Alert, Badge, Group, Loader, Stack, Tabs, Text, Title } from '@mantine/
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { get } from '../api'
+import DiagramsTab from '../project/DiagramsTab'
 import InputTab from '../project/InputTab'
 import OverviewTab from '../project/OverviewTab'
 import SrsTab from '../project/SrsTab'
@@ -22,6 +23,7 @@ const TABS: { value: string; label: string; Component: (props: ProjectTabProps) 
   { value: 'tests', label: 'Test Cases', Component: TestsTab },
   { value: 'traceability', label: 'Traceability', Component: TraceabilityTab },
   { value: 'test-plan', label: 'Test Plan', Component: TestPlanTab },
+  { value: 'diagrams', label: 'Diagrams', Component: DiagramsTab },
 ]
 
 export default function ProjectPage() {

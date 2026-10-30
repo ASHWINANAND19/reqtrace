@@ -131,3 +131,11 @@ export interface TestPlan {
   created_at: string
   updated_at: string
 }
+
+export interface Diagram {
+  kind: 'use_case' | 'class' | 'sequence'
+  title: string
+  source: string
+  srs_version_no: number
+  updated_at: string
+}

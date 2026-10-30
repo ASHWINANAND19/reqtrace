@@ -194,3 +194,17 @@ class TestPlan(Base):
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class Diagram(Base):
+    """Latest UML diagram of each kind for a project, as editable Mermaid source (FR-10)."""
+
+    __tablename__ = "diagrams"
+    __table_args__ = (UniqueConstraint("project_id", "kind"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    srs_version_id: Mapped[int] = mapped_column(ForeignKey("srs_versions.id", ondelete="CASCADE"))
+    kind: Mapped[str] = mapped_column(String(20))  # use_case | class | sequence
+    source: Mapped[str] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
