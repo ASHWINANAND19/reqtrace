@@ -1,0 +1,269 @@
+[
+  {
+    "id": "TC-01",
+    "title": "User Registration and Login with Valid Credentials",
+    "reqs": [
+      "FR-01"
+    ],
+    "type": "Functional",
+    "layer": "UI",
+    "steps": "Open registration form; enter valid name, unique email, and password; submit; log in with credentials",
+    "expected": "User is registered successfully and lands on the dashboard with an active session",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-02",
+    "title": "User Logout and Session Expiry",
+    "reqs": [
+      "FR-01",
+      "SEC-02"
+    ],
+    "type": "Security",
+    "layer": "UI",
+    "steps": "Log in to application; click logout button; attempt to access dashboard URL directly",
+    "expected": "Session is terminated and user is redirected to login page",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-03",
+    "title": "Duplicate Email Registration Rejection",
+    "reqs": [
+      "FR-01"
+    ],
+    "type": "Negative",
+    "layer": "UI",
+    "steps": "Register an account with an email address that already exists in the system",
+    "expected": "Registration is rejected with a clear error message indicating duplicate email",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-04",
+    "title": "Project Creation and Management",
+    "reqs": [
+      "FR-02"
+    ],
+    "type": "Functional",
+    "layer": "UI",
+    "steps": "Log in as authorized user; click New Project; enter project name; save; rename and archive project",
+    "expected": "Project is created, listed on dashboard, successfully renamed, and archived",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-05",
+    "title": "Project Creation with Empty Name",
+    "reqs": [
+      "FR-02"
+    ],
+    "type": "Negative",
+    "layer": "UI",
+    "steps": "Click New Project; leave project name blank; attempt to save",
+    "expected": "Validation error shown; project is not created",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-06",
+    "title": "Submit Raw Requirements Text",
+    "reqs": [
+      "FR-03"
+    ],
+    "type": "Functional",
+    "layer": "UI",
+    "steps": "Open project requirements tab; paste typed requirement text; submit",
+    "expected": "Raw requirements are stored against the project successfully",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-07",
+    "title": "Upload Supported and Oversize Requirement Files",
+    "reqs": [
+      "FR-03",
+      "SEC-04"
+    ],
+    "type": "Boundary",
+    "layer": "UI",
+    "steps": "Upload a valid 5 MB PDF requirement file; upload an 11 MB PDF file",
+    "expected": "5 MB PDF is parsed and stored; 11 MB PDF is rejected with an oversize error",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-08",
+    "title": "Generate IEEE 830 SRS Draft with Unique IDs",
+    "reqs": [
+      "FR-04"
+    ],
+    "type": "Functional",
+    "layer": "API",
+    "steps": "Submit valid requirement input; invoke SRS draft generation endpoint",
+    "expected": "SRS draft generated with IEEE 830 structure, unique requirement IDs (FR-xx, NFR-xx), and human review notice",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-09",
+    "title": "SRS Versioning, Editing, and Approval",
+    "reqs": [
+      "FR-05"
+    ],
+    "type": "Functional",
+    "layer": "UI",
+    "steps": "Edit generated SRS content; save changes to create new version; compare versions; mark latest version as approved",
+    "expected": "New version created, differences displayed correctly, and approval timestamp/user recorded",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-10",
+    "title": "Save Empty SRS Content Rejection",
+    "reqs": [
+      "FR-05"
+    ],
+    "type": "Negative",
+    "layer": "UI",
+    "steps": "Clear all text in SRS editor; attempt to save",
+    "expected": "Save is rejected with a clear error message; no new version is created",
+    "priority": "Should"
+  },
+  {
+    "id": "TC-11",
+    "title": "Independent Test Case Generation from Approved SRS",
+    "reqs": [
+      "FR-06"
+    ],
+    "type": "Functional",
+    "layer": "API",
+    "steps": "Provide approved SRS JSON to LLM-B test agent; invoke test case generation",
+    "expected": "Positive, negative, and boundary test cases generated for every requirement with all mandatory fields",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-12",
+    "title": "Test Case Generation Blocked for Unapproved SRS",
+    "reqs": [
+      "FR-06"
+    ],
+    "type": "Negative",
+    "layer": "UI",
+    "steps": "Attempt to generate test cases while SRS is in draft unapproved status",
+    "expected": "Generation is blocked with a message requiring SRS approval first",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-13",
+    "title": "Requirements Traceability Matrix and Coverage Display",
+    "reqs": [
+      "FR-07"
+    ],
+    "type": "Functional",
+    "layer": "UI",
+    "steps": "Navigate to Traceability tab after test case generation",
+    "expected": "Matrix displays requirements linked to test cases, coverage percentage, and highlights uncovered items",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-14",
+    "title": "Export Artifacts to DOCX and CSV",
+    "reqs": [
+      "FR-08"
+    ],
+    "type": "Functional",
+    "layer": "UI",
+    "steps": "Click export buttons for SRS (DOCX) and test cases / traceability matrix (CSV)",
+    "expected": "Files download successfully and open correctly in standard office tools matching screen content",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-15",
+    "title": "Test Plan Generation",
+    "reqs": [
+      "FR-09"
+    ],
+    "type": "Functional",
+    "layer": "UI",
+    "steps": "Click Generate Test Plan on an approved SRS",
+    "expected": "Test plan generated containing scope, approach, environment, schedule, and risks",
+    "priority": "Should"
+  },
+  {
+    "id": "TC-16",
+    "title": "UML Diagram Generation and Rendering",
+    "reqs": [
+      "FR-10"
+    ],
+    "type": "Functional",
+    "layer": "UI",
+    "steps": "Click Generate Diagrams from approved SRS",
+    "expected": "Use-case, class, and sequence diagram definitions generated and rendered as viewable images",
+    "priority": "Should"
+  },
+  {
+    "id": "TC-17",
+    "title": "Ambiguity and Conflict Detection in SRS Draft",
+    "reqs": [
+      "FR-11"
+    ],
+    "type": "Functional",
+    "layer": "UI",
+    "steps": "Input requirement containing ambiguous words ('fast', 'user-friendly') and conflicts; run check",
+    "expected": "System flags ambiguous phrasing, conflicting statements, and missing sections with suggestions",
+    "priority": "Should"
+  },
+  {
+    "id": "TC-18",
+    "title": "Role-Based Access Control and Permissions",
+    "reqs": [
+      "FR-12",
+      "SEC-03"
+    ],
+    "type": "Security",
+    "layer": "API",
+    "steps": "Attempt SRS approval and admin actions using QA Engineer and Developer user tokens",
+    "expected": "Actions are denied with HTTP 403 Forbidden response",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-19",
+    "title": "Software Architecture Document (SAD) Generation",
+    "reqs": [
+      "FR-13"
+    ],
+    "type": "Functional",
+    "layer": "API",
+    "steps": "Trigger SAD generation from approved SRS",
+    "expected": "SAD generated with system components and rationale tied directly to requirement IDs",
+    "priority": "Should"
+  },
+  {
+    "id": "TC-20",
+    "title": "Audit Log Recording and Administrator Access",
+    "reqs": [
+      "FR-15"
+    ],
+    "type": "Functional",
+    "layer": "UI",
+    "steps": "Perform create, edit, approve, and export actions; log in as Administrator to view audit log",
+    "expected": "Audit entries recorded with timestamp, actor, and action; viewable strictly by Administrator",
+    "priority": "Should"
+  },
+  {
+    "id": "TC-21",
+    "title": "Automated Playwright Test Script Generation",
+    "reqs": [
+      "FR-16"
+    ],
+    "type": "Functional",
+    "layer": "Script",
+    "steps": "Run Test Agent script generator on test cases JSON",
+    "expected": "One executable Playwright test script generated per test case carrying correct TC and requirement IDs",
+    "priority": "Must"
+  },
+  {
+    "id": "TC-22",
+    "title": "Automated Test Execution and Execution Report Generation",
+    "reqs": [
+      "FR-17"
+    ],
+    "type": "Functional",
+    "layer": "Script",
+    "steps": "Execute test script runner without human intervention",
+    "expected": "Tests executed, pass/fail status and duration recorded, and HTML/CSV/JUnit reports generated",
+    "priority": "Must"
+  }
+]
