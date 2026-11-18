@@ -35,6 +35,7 @@ in tests and when no key is set.
 | [docs/sprint-1-review.md](docs/sprint-1-review.md), [docs/sprint-2-review.md](docs/sprint-2-review.md) | Sprint reviews |
 | [docs/TEST_LOG.md](docs/TEST_LOG.md), [docs/TEST_SUMMARY.md](docs/TEST_SUMMARY.md) | Test execution and summary |
 | [docs/DEVIATIONS.md](docs/DEVIATIONS.md) | Differences from the SRS, SAD and Test Plan |
+| [docs/ReqTrace_Part1_Submission_v2.1.pdf](docs/ReqTrace_Part1_Submission_v2.1.pdf) | Part 1 submission v2.1: project overview, SRS, test plan, architecture document |
 | [deploy/README.md](deploy/README.md) | Docker Compose and Kubernetes details |
 
 Requirements, test plan and architecture come from the Part 1 deliverables (SRS `ReqTrace-SRS-01`,
